@@ -1,0 +1,9 @@
+services:
+  uangku:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"   # hanya lokal; diakses publik lewat reverse proxy (HTTPS)
+    env_file: .env
+    volumes:
+      - ./data:/app/data

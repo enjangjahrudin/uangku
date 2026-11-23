@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-bg: #f7f6f3;
+  --color-surface: #ffffff;
+  --color-line: #e7e5df;
+  --color-ink: #1c1b18;
+  --color-muted: #77756d;
+  --color-brand: #1f5f4a;
+  --color-brand-soft: #e4efe9;
+  --color-in: #1b7a4f;
+  --color-out: #b4392f;
+  --color-warn: #a86a0c;
+  --color-warn-soft: #fbf0d9;
+  --color-out-soft: #f9e5e2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #151513;
+    --color-surface: #1e1e1b;
+    --color-line: #2e2d29;
+    --color-ink: #efede6;
+    --color-muted: #9b988f;
+    --color-brand: #5fb593;
+    --color-brand-soft: #1d2e27;
+    --color-in: #5fc08f;
+    --color-out: #ee7b70;
+    --color-warn: #e4b05a;
+    --color-warn-soft: #33290f;
+    --color-out-soft: #38201d;
+  }
+}
+
+html { color-scheme: light dark; }
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+.num { font-variant-numeric: tabular-nums; }
+
+.card { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 14px; }
+.input {
+  width: 100%; background: var(--color-surface); border: 1px solid var(--color-line);
+  border-radius: 10px; padding: 0.6rem 0.75rem; font-size: 16px; outline: none; color: var(--color-ink);
+}
+.input:focus { border-color: var(--color-brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand) 18%, transparent); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  border-radius: 10px; padding: .6rem 1rem; font-weight: 600; font-size: 14px;
+  border: 1px solid var(--color-line); background: var(--color-surface); cursor: pointer;
+}
+.btn:hover { background: var(--color-bg); }
+.btn-primary { background: var(--color-brand); color: #fff; border-color: var(--color-brand); }
+.btn-primary:hover { background: var(--color-brand); filter: brightness(1.1); }
+@media (prefers-color-scheme: dark) { .btn-primary { color: #0e1a15; } }
+.label { font-size: 12px; font-weight: 600; color: var(--color-muted); margin-bottom: .3rem; display: block; }

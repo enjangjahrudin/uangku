@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { deleteDebt, payDebt } from "@/app/actions-p2";
+import { deleteDebt, payDebt, updateDebt } from "@/app/actions-p2";
 import { AmountInput } from "@/components/amount-input";
 import { Money } from "@/components/privacy";
 import { dateLabel, todayISO } from "@/lib/format";
@@ -20,7 +20,12 @@ export function DebtCard({ d, wallets }: { d: Debt; wallets: Wallet[] }) {
   const [payAmount, setPayAmount] = useState<number>(
     d.installment > 0 ? Math.min(d.installment, d.remaining) : d.remaining
   );
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpenPay, setIsOpenPay] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Initial payType for edit
+  const initialPayType = d.installment > 0 ? "installment" : d.due_date ? "deadline" : "flexible";
+  const [editPayType, setEditPayType] = useState<"flexible" | "installment" | "deadline">(initialPayType);
 
   const pct = Math.min(100, Math.round((d.paid / d.principal) * 100));
   const badge = STATUS_BADGE[d.status];
@@ -49,6 +54,8 @@ export function DebtCard({ d, wallets }: { d: Debt; wallets: Wallet[] }) {
           <div>Total awal: <Money value={d.principal} /></div>
           {d.installment > 0 ? (
             <div className="text-ink font-medium">Cicilan: <Money value={d.installment} />/bln</div>
+          ) : d.due_date ? (
+            <div className="text-muted">Tenggat: {dateLabel(d.due_date)}</div>
           ) : (
             <div className="text-muted italic">Pembayaran bebas</div>
           )}
@@ -66,80 +73,205 @@ export function DebtCard({ d, wallets }: { d: Debt; wallets: Wallet[] }) {
         </div>
       </div>
 
-      {/* Aksi Pembayaran */}
-      <div className="border-t border-line/70 pt-2.5">
-        {!isOpen ? (
-          <div className="flex items-center gap-2">
-            {d.remaining > 0 && wallets.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setIsOpen(true)}
-                className="btn btn-primary flex-1 !py-2 text-xs"
-              >
-                {payable ? "Catat Pembayaran" : "Catat Pelunasan Diterima"}
-              </button>
-            )}
-            <form action={deleteDebt.bind(null, d.id)}>
-              <button
-                className="btn !py-2 text-xs !text-muted hover:!text-out hover:border-out-soft"
-                title="Hapus catatan ini"
-              >
-                Hapus
-              </button>
-            </form>
+      {/* Form Edit Modal / Box */}
+      {isEditing && (
+        <form
+          action={updateDebt}
+          onSubmit={() => setIsEditing(false)}
+          className="space-y-3 bg-bg/80 p-3.5 rounded-xl border border-line text-xs"
+        >
+          <div className="flex items-center justify-between border-b border-line pb-2">
+            <span className="font-bold text-ink">Edit Catatan {payable ? "Hutang" : "Piutang"}</span>
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              className="text-muted hover:text-ink font-semibold"
+            >
+              Batal
+            </button>
           </div>
-        ) : (
-          <form action={payDebt} onSubmit={() => setIsOpen(false)} className="space-y-3 bg-bg/60 p-3 rounded-xl border border-line">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-ink">
-                {payable ? "Pembayaran Hutang" : "Penerimaan Piutang"}
-              </span>
+
+          <input type="hidden" name="debt_id" value={d.id} />
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="label">Jenis</label>
+              <select name="kind" defaultValue={d.kind} className="input !py-1 text-xs">
+                <option value="payable">Hutang Saya</option>
+                <option value="receivable">Piutang</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">Nama Pihak</label>
+              <input name="party" required defaultValue={d.party} className="input !py-1 text-xs" />
+            </div>
+          </div>
+
+          <div>
+            <label className="label">Total Pokok Awal</label>
+            <AmountInput defaultValue={d.principal} />
+          </div>
+
+          <div>
+            <label className="label">Skema Pembayaran</label>
+            <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-surface border border-line text-[11px] font-semibold">
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
-                className="text-xs text-muted hover:text-ink font-medium"
+                onClick={() => setEditPayType("flexible")}
+                className={`py-1 rounded text-center ${editPayType === "flexible" ? "bg-bg text-brand font-bold" : "text-muted"}`}
               >
-                Batal
+                Bebas
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditPayType("installment")}
+                className={`py-1 rounded text-center ${editPayType === "installment" ? "bg-bg text-brand font-bold" : "text-muted"}`}
+              >
+                Cicilan
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditPayType("deadline")}
+                className={`py-1 rounded text-center ${editPayType === "deadline" ? "bg-bg text-brand font-bold" : "text-muted"}`}
+              >
+                Tenggat
               </button>
             </div>
+          </div>
 
-            <input type="hidden" name="debt_id" value={d.id} />
+          {editPayType === "installment" && (
+            <div className="grid grid-cols-2 gap-2 p-2 rounded bg-surface border border-line">
+              <div>
+                <label className="label">Cicilan/Bulan</label>
+                <AmountInput name="installment" defaultValue={d.installment} />
+              </div>
+              <div>
+                <label className="label">Tgl Tagihan (1–31)</label>
+                <input
+                  name="due_day"
+                  type="number"
+                  min={1}
+                  max={31}
+                  defaultValue={d.due_day ?? ""}
+                  placeholder="mis. 5"
+                  className="input !py-1 text-xs"
+                />
+              </div>
+            </div>
+          )}
 
+          {editPayType === "deadline" && (
+            <div className="p-2 rounded bg-surface border border-line">
+              <label className="label">Tenggat Lunas</label>
+              <input
+                name="due_date"
+                type="date"
+                defaultValue={d.due_date ?? ""}
+                className="input !py-1 text-xs"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="label">Catatan</label>
+            <input name="note" defaultValue={d.note} placeholder="Opsional" className="input !py-1 text-xs" />
+          </div>
+
+          <button className="btn btn-primary w-full !py-2 text-xs font-semibold shadow-xs">
+            Simpan Perubahan
+          </button>
+        </form>
+      )}
+
+      {/* Form Pembayaran Box */}
+      {isOpenPay && (
+        <form
+          action={payDebt}
+          onSubmit={() => setIsOpenPay(false)}
+          className="space-y-3 bg-bg/80 p-3.5 rounded-xl border border-line"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-ink">
+              {payable ? "Catat Pembayaran Hutang" : "Catat Pelunasan Diterima"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsOpenPay(false)}
+              className="text-xs text-muted hover:text-ink font-medium"
+            >
+              Batal
+            </button>
+          </div>
+
+          <input type="hidden" name="debt_id" value={d.id} />
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="label !mb-0">Nominal yang Dibayar</label>
+              <button
+                type="button"
+                onClick={() => setPayAmount(d.remaining)}
+                className="text-[11px] text-brand font-semibold hover:underline"
+              >
+                Lunasi Sisa (Rp{d.remaining.toLocaleString("id-ID")})
+              </button>
+            </div>
+            <AmountInput key={payAmount} defaultValue={payAmount} autoFocus />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="label !mb-0">Nominal yang Dibayar</label>
-                <button
-                  type="button"
-                  onClick={() => setPayAmount(d.remaining)}
-                  className="text-[11px] text-brand font-semibold hover:underline"
-                >
-                  Lunasi Sisa (Rp{d.remaining.toLocaleString("id-ID")})
-                </button>
-              </div>
-              <AmountInput key={payAmount} defaultValue={payAmount} autoFocus />
+              <label className="label">{payable ? "Sumber Dompet" : "Masuk ke Dompet"}</label>
+              <select name="wallet_id" className="input !py-1.5 text-xs">
+                {wallets.map((w) => (
+                  <option key={w.id} value={w.id}>{w.name}</option>
+                ))}
+              </select>
             </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="label">{payable ? "Sumber Dompet" : "Masuk ke Dompet"}</label>
-                <select name="wallet_id" className="input !py-1.5 text-xs">
-                  {wallets.map((w) => (
-                    <option key={w.id} value={w.id}>{w.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="label">Tanggal Bayar</label>
-                <input type="date" name="date" defaultValue={todayISO()} className="input !py-1.5 text-xs" />
-              </div>
+            <div>
+              <label className="label">Tanggal Bayar</label>
+              <input type="date" name="date" defaultValue={todayISO()} className="input !py-1.5 text-xs" />
             </div>
+          </div>
 
-            <button className="btn btn-primary w-full !py-2 text-xs shadow-xs">
-              Simpan Pembayaran
+          <button className="btn btn-primary w-full !py-2 text-xs shadow-xs">
+            Simpan Pembayaran
+          </button>
+        </form>
+      )}
+
+      {/* Tombol Aksi Utama */}
+      {!isOpenPay && !isEditing && (
+        <div className="border-t border-line/70 pt-2.5 flex items-center gap-2">
+          {d.remaining > 0 && wallets.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsOpenPay(true)}
+              className="btn btn-primary flex-1 !py-2 text-xs font-semibold"
+            >
+              {payable ? "Bayar" : "Terima Bayar"}
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="btn !py-2 text-xs !text-ink hover:bg-bg"
+            title="Edit data hutang/piutang ini"
+          >
+            Edit
+          </button>
+
+          <form action={deleteDebt.bind(null, d.id)}>
+            <button
+              className="btn !py-2 text-xs !text-muted hover:!text-out hover:border-out-soft"
+              title="Hapus catatan ini"
+            >
+              Hapus
             </button>
           </form>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

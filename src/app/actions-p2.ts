@@ -53,6 +53,21 @@ export async function payDebt(fd: FormData) {
   refresh();
 }
 
+export async function updateDebt(fd: FormData) {
+  const id = idOrNull(fd.get("debt_id"));
+  if (!id) return;
+  const kind = str(fd.get("kind")) === "receivable" ? "receivable" : "payable";
+  const party = str(fd.get("party"));
+  const principal = num(fd.get("principal"));
+  if (!party || !principal) return;
+  const day = num(fd.get("due_day"));
+  db.prepare(`UPDATE debts SET kind = ?, party = ?, principal = ?, installment = ?, due_day = ?, due_date = ?, note = ? WHERE id = ?`).run(
+    kind, party, principal, num(fd.get("installment")), day >= 1 && day <= 31 ? day : null,
+    str(fd.get("due_date")) || null, str(fd.get("note")), id
+  );
+  refresh();
+}
+
 export async function deleteDebt(id: number) {
   db.prepare("UPDATE transactions SET debt_id = NULL WHERE debt_id = ?").run(id);
   db.prepare("DELETE FROM debts WHERE id = ?").run(id);

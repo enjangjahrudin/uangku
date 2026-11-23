@@ -7,10 +7,11 @@ export function AmountInput({ name = "amount", defaultValue = 0, autoFocus = fal
   const shown = v ? Number(v).toLocaleString("id-ID") : "";
   return (
     <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-semibold">Rp</span>
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-semibold pointer-events-none select-none">Rp</span>
       <input
         inputMode="numeric" autoFocus={autoFocus} required placeholder="0"
-        className="input num pl-10 font-semibold"
+        className="input num !pl-10 font-semibold"
+        style={{ paddingLeft: "2.5rem" }}
         value={shown}
         onChange={(e) => setV(e.target.value.replace(/\D/g, "").slice(0, 13))}
       />

@@ -89,7 +89,7 @@ export default function LoginPage() {
                 Kata Sandi Akses
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none z-10">
                   <LockIcon />
                 </span>
                 <input
@@ -100,13 +100,14 @@ export default function LoginPage() {
                   autoFocus
                   placeholder="Masukkan kata sandi..."
                   autoComplete="current-password"
-                  className="input pl-10 pr-10 text-sm font-medium tracking-wide !rounded-xl"
+                  className="input !pl-11 !pr-11 text-sm font-medium tracking-wide !rounded-xl"
+                  style={{ paddingLeft: "2.75rem", paddingRight: "2.75rem" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink p-1 rounded-md transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink p-1 rounded-md transition-colors z-10"
                 >
                   <EyeIcon visible={showPassword} />
                 </button>

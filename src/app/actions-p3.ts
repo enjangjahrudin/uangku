@@ -2,15 +2,11 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { createHash } from "node:crypto";
 import { db } from "@/lib/db";
 import { MEMBER_COOKIE } from "@/lib/member";
+import { hashPin } from "@/lib/hash";
 
 const refresh = () => revalidatePath("/", "layout");
-
-export function hashPin(pin: string): string {
-  return createHash("sha256").update(pin.trim()).digest("hex");
-}
 
 async function setCookie(id: number | null) {
   const jar = await cookies();

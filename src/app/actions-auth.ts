@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { timingSafeEqual } from "node:crypto";
 import { SESSION_COOKIE, SESSION_DAYS, authEnabled, createSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { hashPin } from "@/app/actions-p3";
+import { hashPin } from "@/lib/hash";
 import { MEMBER_COOKIE } from "@/lib/member";
 
 const attempts = new Map<string, { n: number; first: number }>();

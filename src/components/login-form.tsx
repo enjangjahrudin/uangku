@@ -307,7 +307,7 @@ export function LoginForm({ members, hasMasterPassword }: { members: Member[]; h
 
         {/* Footer info */}
         <p className="text-center text-[11px] text-muted/70">
-          UangKu &copy; {new Date().getFullYear()} &middot; Self-hosted Financial Tracker
+          UangKu &copy; {new Date().getFullYear()} &middot; by. <span className="font-semibold text-ink">BuatDigital.id</span>
         </p>
       </div>
     </div>

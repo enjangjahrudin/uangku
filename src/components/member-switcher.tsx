@@ -16,9 +16,9 @@ export function MemberSwitcher({ members, memberId }: { members: Member[]; membe
 
   if (hasPinSystem && current) {
     return (
-      <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-surface border border-line shadow-xs">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-6 h-6 rounded-full bg-brand text-white font-bold text-xs flex items-center justify-center shrink-0">
+      <div className="flex items-center justify-between gap-1.5 p-1.5 px-2.5 rounded-xl bg-surface border border-line shadow-2xs">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div className="w-5.5 h-5.5 rounded-full bg-brand text-white font-bold text-[11px] flex items-center justify-center shrink-0">
             {current.name.slice(0, 1).toUpperCase()}
           </div>
           <span className="text-xs font-bold text-ink truncate">{current.name}</span>
@@ -27,7 +27,7 @@ export function MemberSwitcher({ members, memberId }: { members: Member[]; membe
           type="button"
           onClick={() => start(() => logout())}
           title="Ganti akun anggota"
-          className="text-[11px] text-muted hover:text-brand font-medium hover:underline shrink-0"
+          className="text-[11px] text-muted hover:text-brand font-medium hover:underline shrink-0 pl-1"
         >
           Ganti
         </button>

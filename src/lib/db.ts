@@ -101,8 +101,12 @@ function init(): DatabaseSync {
   if (!txCols.some((c) => c.name === "debt_id"))
     db.exec("ALTER TABLE transactions ADD COLUMN debt_id INTEGER REFERENCES debts(id)");
 
-  // ---- Fase 3: anggota keluarga ----
-  db.exec(`CREATE TABLE IF NOT EXISTS members (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)`);
+  // ---- Fase 3: anggota keluarga & login PIN ----
+  db.exec(`CREATE TABLE IF NOT EXISTS members (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, pin TEXT)`);
+  const memberCols = db.prepare("PRAGMA table_info(members)").all() as { name: string }[];
+  if (!memberCols.some((c) => c.name === "pin"))
+    db.exec("ALTER TABLE members ADD COLUMN pin TEXT");
+
   if (!txCols.some((c) => c.name === "created_by"))
     db.exec("ALTER TABLE transactions ADD COLUMN created_by INTEGER REFERENCES members(id)");
 

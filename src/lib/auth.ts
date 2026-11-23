@@ -12,18 +12,49 @@ async function hmac(secret: string, msg: string) {
 
 export const authEnabled = () => !!process.env.APP_PASSWORD;
 
-export async function createSession(): Promise<string> {
-  const exp = Date.now() + SESSION_DAYS * 86400_000;
-  return `${exp}.${await hmac(process.env.AUTH_SECRET ?? "", String(exp))}`;
+function getSecret() {
+  return process.env.AUTH_SECRET || "uangku-default-secret-salt-family-app";
 }
 
-export async function verifySession(token: string | undefined): Promise<boolean> {
-  if (!token) return false;
-  const [exp, sig] = token.split(".");
-  if (!exp || !sig || Number(exp) < Date.now()) return false;
-  const expected = await hmac(process.env.AUTH_SECRET ?? "", exp);
-  if (expected.length !== sig.length) return false;
-  let diff = 0;
-  for (let i = 0; i < sig.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
-  return diff === 0;
+/** Buat session token bertanda tangan HMAC. */
+export async function createSession(memberId: number | null = null): Promise<string> {
+  const mid = memberId ?? 0;
+  const exp = Date.now() + SESSION_DAYS * 86400_000;
+  const payload = `${mid}.${exp}`;
+  const sig = await hmac(getSecret(), payload);
+  return `${payload}.${sig}`;
+}
+
+export type SessionResult = { valid: boolean; memberId: number | null };
+
+/** Verifikasi session token. Mendukung format lama (${exp}.${sig}) dan format baru (${mid}.${exp}.${sig}). */
+export async function verifySession(token: string | undefined): Promise<SessionResult> {
+  if (!token) return { valid: false, memberId: null };
+  const parts = token.split(".");
+
+  // Format baru: memberId.exp.sig
+  if (parts.length === 3) {
+    const [midStr, exp, sig] = parts;
+    if (!exp || !sig || Number(exp) < Date.now()) return { valid: false, memberId: null };
+    const expected = await hmac(getSecret(), `${midStr}.${exp}`);
+    if (expected.length !== sig.length) return { valid: false, memberId: null };
+    let diff = 0;
+    for (let i = 0; i < sig.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
+    if (diff !== 0) return { valid: false, memberId: null };
+    const mid = Number(midStr);
+    return { valid: true, memberId: mid > 0 ? mid : null };
+  }
+
+  // Format lama (legacy master): exp.sig
+  if (parts.length === 2) {
+    const [exp, sig] = parts;
+    if (!exp || !sig || Number(exp) < Date.now()) return { valid: false, memberId: null };
+    const expected = await hmac(getSecret(), exp);
+    if (expected.length !== sig.length) return { valid: false, memberId: null };
+    let diff = 0;
+    for (let i = 0; i < sig.length; i++) diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
+    return { valid: diff === 0, memberId: null };
+  }
+
+  return { valid: false, memberId: null };
 }

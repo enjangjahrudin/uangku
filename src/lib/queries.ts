@@ -56,9 +56,9 @@ export function getTransactions(period?: string, limit = 500, f: TxFilter = {}):
   `).all(...args) as Tx[];
 }
 
-export type Member = { id: number; name: string };
+export type Member = { id: number; name: string; has_pin: number };
 export function getMembers(): Member[] {
-  return db.prepare("SELECT id, name FROM members ORDER BY id").all() as Member[];
+  return db.prepare("SELECT id, name, CASE WHEN pin IS NOT NULL AND TRIM(pin) != '' THEN 1 ELSE 0 END AS has_pin FROM members ORDER BY id").all() as Member[];
 }
 
 export function getMonthSummary(period: string) {

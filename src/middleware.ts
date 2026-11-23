@@ -3,8 +3,8 @@ import { SESSION_COOKIE, authEnabled, verifySession } from "@/lib/auth";
 
 export async function middleware(req: NextRequest) {
   if (!authEnabled()) return NextResponse.next();
-  const ok = await verifySession(req.cookies.get(SESSION_COOKIE)?.value);
-  if (ok) return NextResponse.next();
+  const res = await verifySession(req.cookies.get(SESSION_COOKIE)?.value);
+  if (res.valid) return NextResponse.next();
   const url = req.nextUrl.clone();
   url.pathname = "/login";
   url.search = "";
